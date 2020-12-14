@@ -37,6 +37,7 @@ example.example.example.com
 192.168.10.200 ansible_connection=ssh ansible_ssh_private_key_file=/home/ubuntu/.ssh/eng74Jaredawskey.pem
 ```
 
+
 <br>
 
 - This is the same file written in YAML. Notice how there are repetitions. This structure should be used if each managed node has a separate connection or SSH key.
@@ -80,6 +81,8 @@ all:
     ansible_ssh_private_key_file: /home/ubuntu/.ssh/eng74Jaredawskey.pem
 ```
 
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
+
 <br>
 
 ## Pinging a host
@@ -90,6 +93,8 @@ all:
 ansible all -m ping # pings all hosts
 ansible host_a -m ping # pings hosts within the group host_a
 ```
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 <br>
 
@@ -109,6 +114,8 @@ $ ansible [pattern] -m [module] -a "[module options]"
 ```yaml
 $ ansible all -a "apt-get update" --become
 ```
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 <br>
 
@@ -136,6 +143,8 @@ $ ansible all -a "apt-get update" --become
   - name: Install SQL DB
     apt: pkg=mysql-server state=present
 ```
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 <br>
 
@@ -171,6 +180,8 @@ $ ansible all -a "apt-get update" --become
       private: 192.168.10.200
 ```
 - Here, we create a variable dictionary `app-IP`. To reference the public IP or private IP we can call this variable using `{{ app-IP["public"] }}
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 <br>
 
@@ -220,6 +231,8 @@ $ ansible all -a "apt-get update" --become
   2. `$ ansible-vault view aws_keys.yml` -- can view the contents, needing a password
 
 > Notice how if you `$ cat aws_keys.yml` you will get an encrypted output so you will need to use the `view` option and input your password
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 <br>
 
