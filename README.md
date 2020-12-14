@@ -13,7 +13,8 @@
 4. [Playbooks](https://github.com/jaredsparta/Ansible-Notes#user-content-playbooks)
 5. [Templates](https://github.com/jaredsparta/Ansible-Notes#user-content-templates-and-variables)
 6. [Security & Ansible vaults](https://github.com/jaredsparta/Ansible-Notes#user-content-security-&-ansible-vaults)
-7. [Creating EC2 instances with Ansible](https://github.com/jaredsparta/Ansible-Notes#user-content-creating-ec2-instances-with-ansible)
+7. [Blocks & Error Handling]()
+8. [Creating EC2 instances with Ansible](https://github.com/jaredsparta/Ansible-Notes#user-content-creating-ec2-instances-with-ansible)
 
 <br>
 
@@ -212,19 +213,19 @@ $ ansible all -a "apt-get update" --become
   - Is it encrypted? **YES**
   - Is it hard to share these files with colleagues? **NO**
 
-- As you can see Ansible vault is a good way to store keys. We can do so using the following.
-
 - We will need to install two things using pip while inside our controller:
   1. `pip3 install awscli`
   2. `pip3 install boto boto3`
 
 **Creating ansible vaults**
 - There are a few shell commands you will need to create an Ansible vault:
-  1. (Optional) Create another directory to keep the vault
-  2. Use `$ ansible-vault create <name-of-key-file>.yml`. I will name mine `aws_keys.yml`
-  3. Input a memorable password
-  4. You will be put into a VIM editor, escape with `<ESC>` then write `:q`
-  5. The vault will now be created
+
+  1. Use `$ ansible-vault create <name-of-key-file>.yml`. I will name mine `aws_keys.yml`
+  2. Input a memorable password
+  3. You will be put into a VIM editor, escape with `<ESC>` then write `:q`
+  4. The vault will now be created, albeit with no stored information
+
+- You 
 
 - There are a few other commands you can use:
   1. `$ ansible-vault edit aws_keys.yml` -- can edit the file
@@ -236,6 +237,185 @@ $ ansible all -a "apt-get update" --become
 
 <br>
 
+## Blocks
+
+- Blocks create logical groups of tasks. They offer ways to handle task errors, similar to exception handling in Python.
+
+**Grouping tasks with blocks**
+- Specifying tasks within a block allows you to set block-specific directives such as `become`, `ignore_errors` etc.
+
+- An example is the following. If we wanted to provision a host to install, configure and start an Apache server only if the OS of the host is `CentOS` we can do
+```yaml
+tasks:
+   - name: Install, configure, and start Apache
+     block:
+       - name: Install httpd and memcached
+         ansible.builtin.yum:
+           name:
+           - httpd
+           - memcached
+           state: present
+
+       - name: Apply the foo config template
+         ansible.builtin.template:
+           src: templates/src.j2
+           dest: /etc/foo.conf
+
+       - name: Start service bar and enable it
+         ansible.builtin.service:
+           name: bar
+           state: started
+           enabled: True
+     when: ansible_facts['distribution'] == 'CentOS'
+     become: true
+     become_user: root
+     ignore_errors: yes
+```
+
+- Ansible will run the check for the `when` condition BEFORE running the three tasks. All three tasks will also inherit the other parameters.
+
+<br>
+
+**Handling errors**
+
+- Two keywords here:
+  1. `rescue`
+  2. `always`
+
+- Using blocks with either of those words will change how you handle errors when running playbooks.
+
+- You can even use both for the same block, allowing for more complex ways to handle errors
+
+- `rescue`:
+  - Rescue blocks specify what tasks to run when any task in the block fails.
+  - If an error occurs in the block and the rescue task succeeds, Ansible reverts the failed status of the original task for the run and continues to run the play as if the original task had succeeded. The rescued task is considered successful, and does not trigger max_fail_percentage or any_errors_fatal configurations.
+  - It is at the same level as the `block` keyword
+  - This is analagous to `try-except` in Python
+  - An example:
+  ```yaml
+    tasks:
+    - name: Handle the error
+      block:
+      - name: Force a failure
+        command: /bin/false
+      - name: Never print this
+        debug:
+          msg: 'I never execute, due to the above task failing, :-('
+
+      rescue:
+      - name: Print when errors
+        debug:
+          msg: 'I caught an error, can do stuff here to fix it, :-)'
+  ```
+- `always`:
+  - The tasks within an `always` section will run regardless of the task status of the tasks in the block
+  - It is at the same level as the `block` keyword
+  - An example:
+  ```yaml
+  - name: Showing an always block
+    block:
+      - name: Prints message
+        debug:
+          msg: 'Valid execution'
+    
+      - name: Failed task
+        command: /bin/false
+
+      - name: this never runs
+        debug:
+          msg: 'This never runs'
+  
+    always:
+      - name:
+        debug:
+          msg: 'This always runs'
+  ```
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
+
+<br>
+
 ## Creating EC2 instances with Ansible
 
-- 
+- There are currently two well-known modules that deal with creating and managing EC2 instances:
+    1. `community.aws.ec2`
+    2. `community.aws.ec2_instance`
+    - Neither are too difficult a module to use but do ensure to follow documentation thoroughly
+
+- What are the differences?
+    1. `ec2` needs a Python version >= 2.6 as well as `boto` to be present on the host while `ec2_instance` needs that as well as `boto3` and `botocore`
+
+    2. `ec2` can create EC2 spot instances but `ec2_instance` cannot.
+
+    3. `ec2` uses the older boto Python module to interact with the EC2 API and no longer receives new features
+
+<br>
+
+**`community.aws.ec2`**
+
+- Keywords for `ec2`:
+    1. `aws_access_key` and `aws_secret_key` 
+        - required; these are keys to be able to enter into AWS and actually do these steps
+        - **you will want to store these keys inside an Ansible-vault -- read on to see how**
+    2. `count`: 
+        - the number of instances to launch, defaulted to 1
+    3. `group` or `group_id`: 
+        - refers to which security groups to associate with the instance (several can be chosen using lists in the same syntax as Python)
+    4. `instance_type`: 
+        - required; dictates what type the instance is (e.g. `t2.micro`)
+    5. `image`: 
+        - required when `state=present` -- the AMI id
+    6. `instance_ids`: 
+        - used if you want to terminate, start or stop pre-existing instances
+    7. `key_name`: 
+        - the key pair to use on the instance; must already exist on AWS
+        - keys can be created/deleted using the `ec2_key` module
+    8. `region`: 
+        - the AWS region to associate to the instance
+    9. **`state`**: 
+        - if `state=absent` then you will need to input which `instance_ids` to terminate
+        -  if `state` is `running`, `stopped` or `restarted` then either `instance_ids` or `instance_tags` is required
+        - the default value is `present` -- if you do not specify then Ansible will assume you are trying to create this instance
+
+- Examples:
+    ```yaml
+    - name: Creating an instance that is part of several SG's
+      amazon.aws.ec2:
+        key_name: mykey
+        group: ['databases', 'internal-services', 'sshable',    'and-so-forth']
+        instance_type: m1.large
+        image: ami-6e649707
+        wait: yes
+        wait_timeout: 500
+        count: 5
+        instance_tags:
+            db: postgres
+        monitoring: yes
+        vpc_subnet_id: subnet-29e63245
+        assign_public_ip: yes
+    ```
+
+    - The following is an example of starting, restarting or terminating an EC2 instance -- just change the state to `restarted` or `absent` for the latter two
+
+    ```yaml
+    - name: start the instances specified in tags
+      amazon.aws.ec2:
+        state: running
+        instance_tags:
+            Name: ExtraPower
+    ```
+
+
+<br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
+
+---
+**Used:**
+
+- [Ansible-vault with playbooks](https://docs.ansible.com/ansible/latest/user_guide/vault.html#vault)
+
+- [Using the `ec2` module](https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_module.html#ansible-collections-amazon-aws-ec2-module)
+
+- [Using the `ec2_instance` module](https://docs.ansible.com/ansible/latest/collections/community/aws/ec2_instance_module.html)
+

@@ -1,6 +1,6 @@
 # Common syntax within Ansible playbooks
 
-**Common Ansible modules**
+## Common modules
 > The following modules are built-in unless otherwise stated
 
 - `apt`
@@ -26,7 +26,7 @@
 
 - `npm`
    - Used to specify commands from the npm package manager
-> Run `ansible-galaxy collection install community.general` inside controller before use in playbooks
+   - Run `ansible-galaxy collection install community.general` inside controller before use in playbooks
 
 - `get_url`
     - Used to downloads files from HTTP, HTTPS or FTP from a name to the host server
@@ -40,7 +40,7 @@
 
 <br>
 
-**Handlers**
+## Handlers
 
 - These are needed when you only want a task to run if a change is made on the machine -- otherwise you wouldn't want to
     - For example, if you change a configuration file of a service, you may want to restart it so it takes those new files into account
