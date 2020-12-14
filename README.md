@@ -6,15 +6,18 @@
 <br>
 
 ## Contents
-1. Inventories
-2. Pinging hosts
-3. Ad-hoc commands
-4. Playbooks
-5. Templates
+
+1. [Inventories](https://github.com/jaredsparta/Ansible-Notes#user-content-host-file-or-inventory)
+2. [Pinging hosts](https://github.com/jaredsparta/Ansible-Notes#user-content-pinging-a-host)
+3. [Ad-hoc commands](https://github.com/jaredsparta/Ansible-Notes#user-content-ad-hoc-commands)
+4. [Playbooks](https://github.com/jaredsparta/Ansible-Notes#user-content-playbooks)
+5. [Templates](https://github.com/jaredsparta/Ansible-Notes#user-content-templates-and-variables)
+6. [Security & Ansible vaults](https://github.com/jaredsparta/Ansible-Notes#user-content-security-&-ansible-vaults)
+7. [Creating EC2 instances with Ansible](https://github.com/jaredsparta/Ansible-Notes#user-content-creating-ec2-instances-with-ansible)
 
 <br>
 
-## Host file or Inventory
+##  Host file or Inventory
 - There are two categories of nodes: the control node and managed nodes
     - The control node is the machine running Ansible
     - A managed node is another machine that we want to change. Ansible does not need to be installed on these machines.
@@ -168,3 +171,58 @@ $ ansible all -a "apt-get update" --become
       private: 192.168.10.200
 ```
 - Here, we create a variable dictionary `app-IP`. To reference the public IP or private IP we can call this variable using `{{ app-IP["public"] }}
+
+<br>
+
+## Security & Ansible Vaults
+
+- We can use a few ways to keep security tight:
+  1. Secrets
+  2. Environment variables
+  3. Software like Ansible that use keys for what they do
+
+- What to consider:
+
+  **`.gitignore`**
+  - Is it protected from online viewing? **YES**
+  - Is it segregated from the code goes online, on GitHub? **NO**
+  - Is it encrypted? **NO**
+  - Is it hard to share these files with colleagues? **NO**
+
+  **`Environment variables`**
+  - Is it protected from online viewing? **YES**
+  - Is it segregated from the code goes online, on GitHub? **YES**
+  - Is it encrypted? **NO**
+  - Is it hard to share these files with colleagues? **NO**
+
+  **`Ansible Vault`**
+  - Is it protected from online viewing? **YES**
+  - Is it segregated from the code goes online, on GitHub? **YES**
+  - Is it encrypted? **YES**
+  - Is it hard to share these files with colleagues? **NO**
+
+- As you can see Ansible vault is a good way to store keys. We can do so using the following.
+
+- We will need to install two things using pip while inside our controller:
+  1. `pip3 install awscli`
+  2. `pip3 install boto boto3`
+
+**Creating ansible vaults**
+- There are a few shell commands you will need to create an Ansible vault:
+  1. (Optional) Create another directory to keep the vault
+  2. Use `$ ansible-vault create <name-of-key-file>.yml`. I will name mine `aws_keys.yml`
+  3. Input a memorable password
+  4. You will be put into a VIM editor, escape with `<ESC>` then write `:q`
+  5. The vault will now be created
+
+- There are a few other commands you can use:
+  1. `$ ansible-vault edit aws_keys.yml` -- can edit the file
+  2. `$ ansible-vault view aws_keys.yml` -- can view the contents, needing a password
+
+> Notice how if you `$ cat aws_keys.yml` you will get an encrypted output so you will need to use the `view` option and input your password
+
+<br>
+
+## Creating EC2 instances with Ansible
+
+- 
