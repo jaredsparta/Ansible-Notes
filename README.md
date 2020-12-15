@@ -12,9 +12,10 @@
 3. [Ad-hoc commands](https://github.com/jaredsparta/Ansible-Notes#user-content-ad-hoc-commands)
 4. [Playbooks](https://github.com/jaredsparta/Ansible-Notes#user-content-playbooks)
 5. [Templates](https://github.com/jaredsparta/Ansible-Notes#user-content-templates-and-variables)
-6. [Security & Ansible vaults](https://github.com/jaredsparta/Ansible-Notes#user-content-security-&-ansible-vaults)
-7. [Blocks & Error Handling]()
-8. [Creating EC2 instances with Ansible](https://github.com/jaredsparta/Ansible-Notes#user-content-creating-ec2-instances-with-ansible)
+6. [Security & Ansible vaults](https://github.com/jaredsparta/Ansible-Notes#user-content-security--ansible-vaults)
+7. [Blocks & Error Handling](https://github.com/jaredsparta/Ansible-Notes#user-content-blocks)
+8. [AWS modules](https://github.com/jaredsparta/Ansible-Notes#user-content-aws-modules)
+9. [Creating EC2 instances with Ansible](https://github.com/jaredsparta/Ansible-Notes#user-content-creating-ec2-instances-with-ansible)
 
 <br>
 
@@ -37,7 +38,6 @@ example.example.example.com
 [db_server]
 192.168.10.200 ansible_connection=ssh ansible_ssh_private_key_file=/home/ubuntu/.ssh/eng74Jaredawskey.pem
 ```
-
 
 <br>
 
@@ -82,9 +82,9 @@ all:
     ansible_ssh_private_key_file: /home/ubuntu/.ssh/eng74Jaredawskey.pem
 ```
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Pinging a host
 - One can check if the controller has SSH access to a host by using the ping command
@@ -95,9 +95,9 @@ ansible all -m ping # pings all hosts
 ansible host_a -m ping # pings hosts within the group host_a
 ```
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Ad-hoc commands
 - While playbooks are good as they allow you to repeat tasks, ad-hoc commands are useful for tasks that you will rarely ever do
@@ -116,9 +116,9 @@ $ ansible [pattern] -m [module] -a "[module options]"
 $ ansible all -a "apt-get update" --become
 ```
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Playbooks
 - Ansible provisions through the use of an Ansible `playbook`. These are configuration files written in YAML providing instructions for what needs to be done in order to bring a managed node into a desired state.
@@ -145,9 +145,9 @@ $ ansible all -a "apt-get update" --become
     apt: pkg=mysql-server state=present
 ```
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Templates and Variables
 - `template` is another Ansible module that uses the Jinja2 templating language
@@ -182,9 +182,9 @@ $ ansible all -a "apt-get update" --become
 ```
 - Here, we create a variable dictionary `app-IP`. To reference the public IP or private IP we can call this variable using `{{ app-IP["public"] }}
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Security & Ansible Vaults
 
@@ -233,9 +233,9 @@ $ ansible all -a "apt-get update" --become
 
 > Notice how if you `$ cat aws_keys.yml` you will get an encrypted output so you will need to use the `view` option and input your password
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
+
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
 
 ## Blocks
 
@@ -331,11 +331,11 @@ tasks:
           msg: 'This always runs'
   ```
 
-[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
-
 <br>
 
-## Creating EC2 instances with Ansible
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
+
+## AWS modules
 
 - There are currently two well-known modules that deal with creating and managing EC2 instances:
     1. `community.aws.ec2`
@@ -404,7 +404,23 @@ tasks:
         instance_tags:
             Name: ExtraPower
     ```
+<br>
 
+[Back to top](https://github.com/jaredsparta/Ansible-Notes#user-content-contents)
+
+
+## Creating EC2 instances with Ansible
+- We will use the previous two concepts to create a playbook that will create an EC2 instance for us.
+
+- A few things to note:
+  1. We will create an Ansible-vault to keep our AWS access and secret keys safe 
+      - we pass this as an arguement when running the playbook
+  2. The hosts in play will be another one called `localhost` 
+      - This is due to the fact that the playbook will not run on any remote system, rather it will run on AWS itself to create a new instance
+      - You will need to add this to the inventory file so you can call it
+
+- Within our playbooks, for each task that requires AWS access we will need to input our AWS access and secret keys
+  - We can do this using pre-defined variables which will have the exact same name as the what you called your keys in your vault
 
 <br>
 
@@ -418,4 +434,3 @@ tasks:
 - [Using the `ec2` module](https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_module.html#ansible-collections-amazon-aws-ec2-module)
 
 - [Using the `ec2_instance` module](https://docs.ansible.com/ansible/latest/collections/community/aws/ec2_instance_module.html)
-
